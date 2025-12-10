@@ -1,4 +1,4 @@
-# Cereal Prices Changes Within Last 30 Years -- Data Analysis & Machine Learning Project
+# Évolution des prix des céréales au cours des 30 dernières années 
 
 ## 1. Introduction
 
