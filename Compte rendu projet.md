@@ -60,11 +60,3 @@ Le projet peut être étendu vers : - LSTM (Deep Learning) - Prophet
 
 ------------------------------------------------------------------------
 
-## Structure recommandée du dépôt GitHub
-
-    📁 cereal-prices-ml
-     ├── README.md
-     ├── notebook.ipynb
-     ├── data/
-     ├── plots/
-     └── model.pkl
