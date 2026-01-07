@@ -1,4 +1,4 @@
-![Évolution des prix des céréales](images/ilias.jpg)
+
 
 # Projet : Évolution des prix des céréales (30 dernières années)                                                                                                                            
 
