@@ -1,4 +1,9 @@
-# Projet : Évolution des prix des céréales (30 dernières années)
+ ![Description de l'image]([images/ilias.png]
+ git add images/ilias.png README.md
+ git commit -m "Ajout d'une image dans le README"
+ git push origin main
+
+# Projet : Évolution des prix des céréales (30 dernières années)                                                                                                                            
 
 ## Description générale
 Ce projet vise à analyser l’évolution des prix de plusieurs céréales (blé, maïs, riz, avoine, etc.) sur une période de 30 ans, puis à développer un modèle de Machine Learning capable de prédire les prix futurs.  
