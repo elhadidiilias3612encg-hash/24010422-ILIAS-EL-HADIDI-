@@ -1,0 +1,90 @@
+# GUIDELINE – PROJET DATA SCIENCE
+## Analyse & Prédiction de l’Évolution des Prix des Céréales
+
+---
+
+## 1. Compréhension du Contexte (Business Understanding)
+Les céréales constituent un pilier fondamental de l’économie mondiale et de la sécurité alimentaire.  
+Ce projet vise à analyser et prédire l’évolution de leurs prix sur 30 ans à l’aide du Machine Learning.
+
+---
+
+## 2. Problématique et Objectifs
+**Problématique :** Comment exploiter les données historiques pour modéliser les tendances et prédire les prix futurs ?  
+**Objectifs :**
+- Analyse historique
+- Identification des tendances
+- Modélisation prédictive
+- Évaluation des performances
+
+---
+
+## 3. Compréhension des Données
+- Source : Kaggle  
+- Type : Série temporelle multivariée  
+- Variables : Date, prix des céréales
+
+---
+
+## 4. Préparation des Données
+- Conversion des dates
+- Suppression des doublons
+- Imputation des valeurs manquantes (médiane)
+
+---
+
+## 5. Analyse Exploratoire (EDA)
+- Statistiques descriptives
+- Analyse des tendances
+- Corrélations entre céréales
+
+---
+
+## 6. Feature Engineering
+- Année
+- Mois
+- Trimestre
+
+---
+
+## 7. Choix du Modèle
+**RandomForestRegressor**  
+Justification : robustesse, non-linéarité, interprétabilité.
+
+---
+
+## 8. Protocole Expérimental
+- Séparation Train / Test
+- Objectif : généralisation
+
+---
+
+## 9. Évaluation
+- MAE
+- RMSE
+- R²
+
+---
+
+## 10. Optimisation
+GridSearchCV pour l’ajustement des hyperparamètres.
+
+---
+
+## 11. Interprétation
+- Importance des variables temporelles
+- Relations entre céréales
+
+---
+
+## 12. Conclusion
+Projet couvrant tout le cycle de vie Data Science, de la donnée brute à l’interprétation.
+
+---
+
+## 13. Perspectives
+- ARIMA / Prophet
+- LSTM
+- Données climatiques
+
+---
