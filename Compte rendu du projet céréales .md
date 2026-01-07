@@ -1,7 +1,4 @@
- ![Description de l'image]([images/ilias.png]
- git add images/ilias.png README.md
- git commit -m "Ajout d'une image dans le README"
- git push origin main
+![Graphique d'analyse des céréales](images/ilias.png)
 
 # Projet : Évolution des prix des céréales (30 dernières années)                                                                                                                            
 
