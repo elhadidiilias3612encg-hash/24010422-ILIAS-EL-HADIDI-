@@ -1,90 +1,375 @@
-# GUIDELINE – PROJET DATA SCIENCE
-## Analyse & Prédiction de l’Évolution des Prix des Céréales
+GUIDELINE COMPLET : PROJET DATA SCIENCE - ÉVOLUTION DES PRIX DES CÉRÉALES
 
----
+Ce guide détaille chaque étape de ton projet Data Science, en t'expliquant le POURQUOI derrière chaque action, pour passer du simple exécution de code à une compréhension approfondie.
 
-## 1. Compréhension du Contexte (Business Understanding)
-Les céréales constituent un pilier fondamental de l’économie mondiale et de la sécurité alimentaire.  
-Ce projet vise à analyser et prédire l’évolution de leurs prix sur 30 ans à l’aide du Machine Learning.
+ 1. CONTEXTE MÉTIER & PROBLÉMATIQUE
+Le Problème Business
+Les marchés céréaliers sont cruciaux pour :
 
----
+Sécurité alimentaire mondiale
 
-## 2. Problématique et Objectifs
-**Problématique :** Comment exploiter les données historiques pour modéliser les tendances et prédire les prix futurs ?  
-**Objectifs :**
-- Analyse historique
-- Identification des tendances
-- Modélisation prédictive
-- Évaluation des performances
+Stabilité économique des agriculteurs
 
----
+Prévision des coûts pour les industriels
 
-## 3. Compréhension des Données
-- Source : Kaggle  
-- Type : Série temporelle multivariée  
-- Variables : Date, prix des céréales
+Ton Objectif Business : Créer un outil de prévision des prix pour aider :
 
----
+Les agriculteurs à optimiser leurs ventes
 
-## 4. Préparation des Données
-- Conversion des dates
-- Suppression des doublons
-- Imputation des valeurs manquantes (médiane)
+Les gouvernements à anticiper les crises alimentaires
 
----
+Les traders à prendre des décisions éclairées
 
-## 5. Analyse Exploratoire (EDA)
-- Statistiques descriptives
-- Analyse des tendances
-- Corrélations entre céréales
+Enjeu Critique :
 
----
+Sous-estimation (Faux Négatif) → Perte d'opportunités financières
 
-## 6. Feature Engineering
-- Année
-- Mois
-- Trimestre
+Sur-estimation (Faux Positif) → Mauvaises décisions d'investissement
 
----
+ 2. LES DONNÉES : TA MATIÈRE PREMIÈRE
+Comprendre Ton Dataset
+Source : Kaggle - "Cereal Prices Changes Within Last 30 Years"
 
-## 7. Choix du Modèle
-**RandomForestRegressor**  
-Justification : robustesse, non-linéarité, interprétabilité.
+Format : Données temporelles (séries chronologiques)
 
----
+Variables : Prix de différentes céréales (blé, maïs, riz, avoine, etc.) sur 30 ans
 
-## 8. Protocole Expérimental
-- Séparation Train / Test
-- Objectif : généralisation
+Structure des données :
 
----
+text
+Date | Wheat_Price | Corn_Price | Rice_Price | Oats_Price | ...
+2020-01 | 200$ | 180$ | 300$ | 150$ | ...
+Limitations initiales :
 
-## 9. Évaluation
-- MAE
-- RMSE
-- R²
+Données purement historiques
 
----
+Pas de facteurs externes (météo, politique, inflation)
 
-## 10. Optimisation
-GridSearchCV pour l’ajustement des hyperparamètres.
+Risque de non-stationnarité (les prix évoluent avec le temps)
 
----
+ 3. PHASE 1 : DATA WRANGLING (NETTOYAGE DES DONNÉES)
+Pourquoi nettoyer ?
+Les algorithmes de ML sont comme des mathématiciens perfectionnistes : ils ne peuvent pas travailler avec des données sales.
 
-## 11. Interprétation
-- Importance des variables temporelles
-- Relations entre céréales
+Étapes critiques :
+A. Conversion du format Date
+python
+# AVANT : '2020-01-01' (string)
+# APRÈS : 2020-01-01 (datetime)
+df['Date'] = pd.to_datetime(df['Date'])
+POURQUOI ? Pour pouvoir extraire des features temporelles (année, mois, jour).
 
----
+B. Traitement des valeurs manquantes
+Scénario : Certains mois n'ont pas de données.
+Solution : Imputation par la médiane sur 3 mois glissants.
 
-## 12. Conclusion
-Projet couvrant tout le cycle de vie Data Science, de la donnée brute à l’interprétation.
+python
+# Imputation intelligente qui préserve les tendances saisonnières
+df['Wheat_Price'] = df['Wheat_Price'].fillna(df['Wheat_Price'].rolling(window=3, center=True).median())
+CHOIX DE L'IMPUTATION :
 
----
+Moyenne : Risque de lisser les pics saisonniers
 
-## 13. Perspectives
-- ARIMA / Prophet
-- LSTM
-- Données climatiques
+Médiane : Plus robuste aux valeurs extrêmes
 
----
+Forward fill : Conserve la dernière valeur connue (bon pour les séries temporelles)
+
+C. Détection des outliers
+python
+# Méthode IQR (InterQuartile Range)
+Q1 = df['Wheat_Price'].quantile(0.25)
+Q3 = df['Wheat_Price'].quantile(0.75)
+IQR = Q3 - Q1
+outliers = df[(df['Wheat_Price'] < (Q1 - 1.5 * IQR)) | (df['Wheat_Price'] > (Q3 + 1.5 * IQR))]
+DÉCISION : Ne pas supprimer les outliers (les pics de prix sont réels et importants), mais les étudier séparément.
+
+ 4. PHASE 2 : EXPLORATORY DATA ANALYSIS (EDA)
+Objectif : Comprendre les patterns avant de modéliser.
+A. Statistiques descriptives
+python
+print(df.describe())
+À ANALYSER :
+
+Moyenne vs Médiane : Si différences importantes → distribution asymétrique
+
+Écart-type : Mesure de la volatilité des prix
+
+Min/Max : Amplitude des variations
+
+B. Visualisations clés
+1. Séries temporelles :
+
+python
+plt.figure(figsize=(15, 6))
+for cereal in cereals:
+    plt.plot(df['Date'], df[cereal], label=cereal)
+plt.title('Évolution des prix sur 30 ans')
+plt.legend()
+plt.show()
+QUESTIONS À SE POSER :
+
+Y a-t-il une tendance générale à la hausse ?
+
+Les céréales évoluent-elles ensemble ?
+
+Y a-t-il des pics communs (crises alimentaires) ?
+
+2. Matrice de corrélation :
+
+python
+correlation_matrix = df[cereals].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+INTERPRÉTATION :
+
+Corrélation > 0.8 : Forte relation (ex: blé et avoine souvent liés)
+
+Corrélation < 0.3 : Faible relation
+
+Corrélation négative : Relation inverse (rare pour les céréales)
+
+3. Analyse de saisonnalité :
+
+python
+# Extraire le mois
+df['Month'] = df['Date'].dt.month
+
+# Moyenne des prix par mois
+monthly_avg = df.groupby('Month')['Wheat_Price'].mean()
+PATTERNS ATTENDUS :
+
+Pic après les récoltes (offre abondante → prix bas)
+
+Creux avant les récoltes (offre faible → prix hauts)
+
+ 5. FEATURE ENGINEERING : CRÉER DE L'INTELLIGENCE
+Pourquoi créer des features ?
+Les dates brutes ne sont pas exploitables par les modèles. Il faut les transformer en informations compréhensibles.
+
+Features temporelles :
+python
+df['Year'] = df['Date'].dt.year
+df['Month'] = df['Date'].dt.month
+df['Quarter'] = df['Date'].dt.quarter
+df['Day_of_week'] = df['Date'].dt.dayofweek  # 0=lundi, 6=dimanche
+Features dérivées :
+python
+# Retour sur 1 mois (pour capturer la dynamique)
+df['Wheat_Return_1M'] = df['Wheat_Price'].pct_change(periods=1)
+
+# Moyenne mobile (lisse les fluctuations)
+df['Wheat_MA_3M'] = df['Wheat_Price'].rolling(window=3).mean()
+
+# Volatilité (écart-type sur 3 mois)
+df['Wheat_Volatility_3M'] = df['Wheat_Price'].rolling(window=3).std()
+Features de lag (décalage) :
+python
+# Prix du mois précédent (très prédictif pour le mois suivant)
+df['Wheat_Lag_1'] = df['Wheat_Price'].shift(1)
+
+# Prix il y a 12 mois (pour la saisonnalité annuelle)
+df['Wheat_Lag_12'] = df['Wheat_Price'].shift(12)
+ ATTENTION AU DATA LEAKAGE : Les features de lag doivent être calculées après la séparation train/test pour éviter de "regarder dans le futur".
+
+ 6. MÉTHODOLOGIE EXPÉRIMENTALE
+Pourquoi séparer les données ?
+Pour éviter que le modèle n'apprenne par cœur le passé sans pouvoir généraliser au futur.
+
+Split temporel (CRUCIAL pour les séries temporelles) :
+python
+# NE PAS FAIRE : train_test_split aléatoire (mélange le temps)
+# À FAIRE : Split chronologique
+
+split_date = '2015-01-01'
+train = df[df['Date'] < split_date]
+test = df[df['Date'] >= split_date]
+
+X_train = train.drop(['Date', 'Wheat_Price'], axis=1)
+y_train = train['Wheat_Price']
+X_test = test.drop(['Date', 'Wheat_Price'], axis=1)
+y_test = test['Wheat_Price']
+RATIONNEL : 20 ans d'entraînement (1990-2010), 10 ans de test (2010-2020).
+
+ 7. MODÉLISATION : RANDOM FOREST REGRESSOR
+Pourquoi Random Forest ?
+A. Avantages pour les séries temporelles :
+Robuste aux outliers (contrairement aux modèles linéaires)
+
+Gère bien les features non-linéaires (les relations prix/temps sont complexes)
+
+Donne l'importance des features (comprendre ce qui influence les prix)
+
+Peu de prétraitement nécessaire (pas besoin de normalisation stricte)
+
+B. Comment fonctionne Random Forest ?
+Analogie : Un comité d'experts qui votent.
+
+Création d'arbres multiples (100 dans ton cas)
+
+Chaque arbre voit :
+
+Un sous-ensemble aléatoire des données (bootstrap)
+
+Un sous-ensemble aléatoire des features à chaque split
+
+Prédiction finale = Moyenne des prédictions de tous les arbres
+
+python
+from sklearn.ensemble import RandomForestRegressor
+
+model = RandomForestRegressor(
+    n_estimators=100,      # Nombre d'arbres
+    max_depth=10,          # Profondeur maximale (évite le surapprentissage)
+    min_samples_split=5,   # Minimum d'échantillons pour splitter
+    random_state=42        # Reproductibilité
+)
+model.fit(X_train, y_train)
+PARAMÈTRES CLÉS :
+
+n_estimators : Plus d'arbres = plus stable, mais plus lent
+
+max_depth : Contrôle la complexité (trop profond = surapprentissage)
+
+min_samples_split : Évite les splits sur trop peu de données
+
+8. ÉVALUATION : MESURER LA PERFORMANCE
+Métriques de régression :
+A. MAE (Mean Absolute Error)
+python
+mae = mean_absolute_error(y_test, predictions)
+INTERPRÉTATION : "En moyenne, le modèle se trompe de X dollars par tonne."
+
+Avantage : Facile à interpréter
+
+Limite : Donne le même poids à toutes les erreurs
+
+B. RMSE (Root Mean Squared Error)
+python
+rmse = np.sqrt(mean_squared_error(y_test, predictions))
+INTERPRÉTATION : "L'erreur quadratique moyenne est de X."
+
+Avantage : Pénalise plus les grosses erreurs
+
+Utilité : Bon pour les applications financières où les grosses erreurs coûtent cher
+
+C. R² Score (Coefficient de détermination)
+python
+r2 = r2_score(y_test, predictions)
+INTERPRÉTATION : "Le modèle explique X% de la variance des prix."
+
+R² = 1 : Parfait
+
+R² = 0 : Aussi bon qu'une prédiction par la moyenne
+
+R² < 0 : Pire que la moyenne
+
+Visualisation des résultats :
+python
+plt.figure(figsize=(15, 6))
+plt.plot(test['Date'], y_test, label='Vrai prix', alpha=0.7)
+plt.plot(test['Date'], predictions, label='Prédiction', alpha=0.7)
+plt.fill_between(test['Date'], 
+                 predictions - rmse, 
+                 predictions + rmse, 
+                 alpha=0.2, 
+                 label='Intervalle d\'erreur (±RMSE)')
+plt.title('Prédictions vs Réalité')
+plt.legend()
+plt.show()
+ANALYSE :
+
+Le modèle capture-t-il les tendances ?
+
+Rate-t-il les pics soudains ?
+
+L'intervalle de confiance est-il réaliste ?
+
+ 9. OPTIMISATION : GRID SEARCH CV
+Pourquoi optimiser ?
+Les paramètres par défaut ne sont pas optimaux pour ton problème spécifique.
+
+Grid Search méthodique :
+python
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'n_estimators': [50, 100, 200],      # Test différentes tailles de forêt
+    'max_depth': [5, 10, 15, None],      # Contrôle la complexité
+    'min_samples_split': [2, 5, 10]      # Évite le surapprentissage
+}
+
+grid_search = GridSearchCV(
+    RandomForestRegressor(random_state=42),
+    param_grid,
+    cv=5,                    # Validation croisée à 5 folds
+    scoring='neg_mean_squared_error',  # On minimise le MSE
+    n_jobs=-1                # Utilise tous les cœurs du CPU
+)
+
+grid_search.fit(X_train, y_train)
+best_params = grid_search.best_params_
+ PRÉCAUTION : Utiliser une validation croisée temporelle (TimeSeriesSplit) au lieu de KFold standard pour éviter le data leakage.
+
+ 10. INTERPRÉTATION : IMPORTANCE DES FEATURES
+Comprendre ce qui influence les prix :
+python
+importances = model.feature_importances_
+features = X_train.columns
+
+# Trier par importance
+indices = np.argsort(importances)[::-1]
+
+plt.figure(figsize=(10, 6))
+plt.title('Importance des features')
+plt.bar(range(len(importances)), importances[indices])
+plt.xticks(range(len(importances)), features[indices], rotation=90)
+plt.show()
+INTERPRÉTATIONS POSSIBLES :
+
+Lag features en tête → Les prix passés sont très prédictifs (marché efficient)
+
+Prix d'autres céréales importants → Forte corrélation inter-marchés
+
+Features saisonnières importantes → Forte saisonnalité
+
+Retours/volatilité importants → Marché dynamique
+
+ 11. LIMITATIONS ET AMÉLIORATIONS
+Limites de ton approche actuelle :
+A. Limites méthodologiques :
+Modèle purement historique : N'inclut pas les facteurs externes
+
+Stationnarité assumée : Les patterns du passé peuvent ne pas se répéter
+
+Pas d'intervalles de confiance fiables : Random Forest sous-estime l'incertitude
+
+B. Facteurs externes manquants :
+python
+# Facteurs à intégrer dans une version améliorée :
+external_factors = {
+    'inflation': 'Érode le pouvoir d\'achat',
+    'climate_data': 'Sécheresses/inondations affectent les récoltes',
+    'geopolitical_events': 'Guerres, embargo, sanctions',
+    'oil_prices': 'Coût du transport et des engrais',
+    'usd_strength': 'La plupart des céréales sont en USD'
+}
+Modèles avancés à explorer :
+1. LSTM (Long Short-Term Memory)
+python
+# Pour les dépendances temporelles longues
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+Avantage : Capture les patterns temporels complexes
+Défi : Besoin de beaucoup de données et de tuning
+
+2. Prophet (Facebook)
+python
+from prophet import Prophet
+Avantage : Gère automatiquement la saisonnalité, les vacances, les outliers
+Défi : Moins personnalisable
+
+3. ARIMA/SARIMA
+python
+from statsmodels.tsa.arima.model import ARIMA
+Avantage : Fondement statistique solide, bons intervalles de confiance
+Défi : Suppose la stationnarité, moins bon avec beaucoup de features
+
